@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "compile": "npx shadow-cljs compile app",
     "server": "npx shadow-cljs server",
     "start": "npx expo start",
     "android": "npx expo start --android",

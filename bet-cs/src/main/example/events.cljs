@@ -18,3 +18,8 @@
  :navigation/set-root-state
  (fn [db [_ navigation-root-state]]
    (assoc-in db [:navigation :root-state] navigation-root-state)))
+
+(rf/reg-event-db
+  :update-team
+  (fn [db [_ team-id updates]]
+    (update-in db [:teams team-id] merge updates)))

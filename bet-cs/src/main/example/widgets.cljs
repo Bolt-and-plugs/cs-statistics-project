@@ -1,5 +1,6 @@
 (ns example.widgets
-  (:require ["react-native" :as rn]))
+  (:require 
+    ["react-native" :as rn]))
 
 
 (defn button [{:keys [style text-style on-press

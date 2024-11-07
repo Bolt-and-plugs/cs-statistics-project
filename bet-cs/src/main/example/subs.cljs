@@ -11,7 +11,14 @@
  (fn [db _]
    (:counter-tappable? db)))
 
+
+(rf/reg-sub
+  :get-teams
+  (fn [db _]
+    (:teams db)))
+
 (rf/reg-sub
  :navigation/root-state
  (fn [db _]
    (get-in db [:navigation :root-state])))
+

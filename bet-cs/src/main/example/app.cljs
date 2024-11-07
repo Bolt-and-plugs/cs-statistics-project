@@ -1,14 +1,17 @@
 (ns example.app
-  (:require [example.events]
-            [example.subs]
-            [example.widgets :refer [button]]
-            [expo.root :as expo-root]
-            ["expo-status-bar" :refer [StatusBar]]
-            [re-frame.core :as rf]
-            ["react-native" :as rn]
-            [reagent.core :as r]
-            ["@react-navigation/native" :as rnn]
-            ["@react-navigation/native-stack" :as rnn-stack]))
+  (:require
+   [example.events]
+   [example.subs]
+   [example.widgets :refer [button]]
+   [expo.root :as expo-root]
+   ["expo-status-bar" :refer [StatusBar]]
+   [re-frame.core :as rf]
+   ["react-native" :as rn]
+   [reagent.core :as r]
+   ["@react-navigation/native" :as rnn]
+   ["@react-navigation/native-stack" :as rnn-stack]))
+
+(def screen-width (.-width (.get (.-Dimensions rn) "window")))
 
 (defonce shadow-splash (js/require "../assets/shadow-cljs.png"))
 (defonce cljs-splash (js/require "../assets/cljs.png"))
@@ -17,42 +20,48 @@
 
 (defn home [^js props]
   (r/with-let [counter (rf/subscribe [:get-counter])
-               tap-enabled? (rf/subscribe [:counter-tappable?])]
-    [:> rn/View {:style {:flex 1
-                         :padding-vertical 50
-                         :justify-content :space-between
-                         :align-items :center
-                         :background-color :white}}
-     [:> rn/View {:style {:align-items :center}}
-      [:> rn/Text {:style {:font-weight   :bold
-                           :font-size     72
-                           :color         :blue
-                           :margin-bottom 20}} @counter]
-      [button {:on-press #(rf/dispatch [:inc-counter])
-               :disabled? (not @tap-enabled?)
-               :style {:background-color :blue}}
-       "Tap me, I'll count"]]
+               tap-enabled? (rf/subscribe [:counter-tappable?])
+               teams (rf/subscribe [:get-teams])]
+    [:> rn/ScrollView {:vertical true
+                       :style {:flex 1
+                               :padding-vertical 50
+                               :background-color :white}}
+     [:> rn/View {:style {:height 50
+                          :width screen-width}}
+      [:> rn/Text {:style {:margin-left 10}} "> Top 20"]]
+     [:> rn/ScrollView {:horizontal true
+                        :style {:width screen-width
+                                :flex 1
+                                :overflow-x :auto
+                                :background-color :#f3f3f3}}
+      (for [[team-id {:keys [image score]}] @teams]
+        ^{:key team-id}
+        [:> rn/View {:style {:align-items :center :flex 1 :margin 5}}
+         [:> rn/Image {:source image :style {:width 80 :height 80}}]
+         [:> rn/Text (str score)]])]
+
+     [:> rn/View {:style {:height 300
+                          :padding-vertical 10
+                          :width screen-width
+                          :background-color :white}}
+      [:> rn/View {:style {:height 20
+                           :width screen-width}}
+       [:> rn/Text {:style {:margin-left 10}} "> Carlinhos"]]]
      [:> rn/View {:style {:align-items :center}}
       [button {:on-press (fn []
                            (-> props .-navigation (.navigate "About")))}
-       "Tap me, I'll navigate"]]
+       "About the project"]]
      [:> rn/View
       [:> rn/View {:style {:flex-direction :row
                            :align-items :center
-                           :margin-bottom 20}}
-       [:> rn/Image {:style {:width  160
-                             :height 160}
-                     :source cljs-splash}]
-       [:> rn/Image {:style {:width  160
-                             :height 160}
-                     :source shadow-splash}]]
+                           :margin-bottom 20}}]
       [:> rn/Text {:style {:font-weight :normal
                            :font-size   15
                            :color       :blue}}
        "Using: shadow-cljs+expo+reagent+re-frame"]]
      [:> StatusBar {:style "auto"}]]))
 
-(defn- about 
+(defn- about
   []
   (r/with-let [counter (rf/subscribe [:get-counter])]
     [:> rn/View {:style {:flex 1
@@ -91,7 +100,7 @@
      [:> Stack.Navigator
       [:> Stack.Screen {:name "Home"
                         :component (fn [props] (r/as-element [home props]))
-                        :options {:title "Example App"}}]
+                        :options {:title "Bet Cs"}}]
       [:> Stack.Screen {:name "About"
                         :component (fn [props] (r/as-element [about props]))
                         :options {:title "About"}}]]]))
