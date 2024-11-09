@@ -13,9 +13,6 @@
 
 (def screen-width (.-width (.get (.-Dimensions rn) "window")))
 
-(defonce shadow-splash (js/require "../assets/shadow-cljs.png"))
-(defonce cljs-splash (js/require "../assets/cljs.png"))
-
 (defonce Stack (rnn-stack/createNativeStackNavigator))
 
 (defn home [^js props]
