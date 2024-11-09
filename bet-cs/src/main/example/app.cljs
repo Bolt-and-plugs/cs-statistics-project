@@ -9,9 +9,15 @@
    ["react-native" :as rn]
    [reagent.core :as r]
    ["@react-navigation/native" :as rnn]
+   ["expo-linear-gradient" :refer [LinearGradient]]
+   ["expo-image" :refer [Image]]
    ["@react-navigation/native-stack" :as rnn-stack]))
 
-(def screen-width (.-width (.get (.-Dimensions rn) "window")))
+(def home-props
+  {:title "Bet CS"
+   :home-icon ""
+   :screen-width (.-width (.get (.-Dimensions rn) "window"))
+   :screen-height (.-height (.get (.-Dimensions rn) "window"))})
 
 (defonce Stack (rnn-stack/createNativeStackNavigator))
 
@@ -19,43 +25,101 @@
   (r/with-let [counter (rf/subscribe [:get-counter])
                tap-enabled? (rf/subscribe [:counter-tappable?])
                teams (rf/subscribe [:get-teams])]
-    [:> rn/ScrollView {:vertical true
-                       :style {:flex 1
-                               :padding-vertical 50
-                               :background-color :white}}
-     [:> rn/View {:style {:height 50
-                          :width screen-width}}
-      [:> rn/Text {:style {:margin-left 10}} "> Top 20"]]
-     [:> rn/ScrollView {:horizontal true
-                        :style {:width screen-width
-                                :flex 1
-                                :overflow-x :auto
-                                :background-color :#f3f3f3}}
-      (for [[team-id {:keys [image score]}] @teams]
-        ^{:key team-id}
-        [:> rn/View {:style {:align-items :center :flex 1 :margin 5}}
-         [:> rn/Image {:source image :style {:width 80 :height 80}}]
-         [:> rn/Text (str score)]])]
-
-     [:> rn/View {:style {:height 300
-                          :padding-vertical 10
-                          :width screen-width
-                          :background-color :white}}
+    [:> rn/View {:style {:padding-vertical 40
+                         :flex-direction :column
+                         :justify-content :space-between
+                         :height (home-props :screen-height)
+                         :background-color :white}}
+     [:> rn/View {:style {:flex 1}}
       [:> rn/View {:style {:height 20
-                           :width screen-width}}
-       [:> rn/Text {:style {:margin-left 10}} "> Carlinhos"]]]
-     [:> rn/View {:style {:align-items :center}}
-      [button {:on-press (fn []
-                           (-> props .-navigation (.navigate "About")))}
-       "About the project"]]
-     [:> rn/View
+                           :margin-bottom 5
+                           :width (home-props :screen-width)}}
+       [:> rn/Text {:style {:margin-left 10
+                            :font-weight :bold}} "> Top 20"]]
+      [:> rn/ScrollView {:horizontal true
+                         :showsHorizontalScrollIndicator false
+                         :style {:width (home-props :screen-width)
+                                 :flex 2
+                                 :overflow-x :none}}
+       (for [[team-id {:keys [image score]}] @teams]
+         ^{:key team-id}
+         [:> rn/View {:style {:align-items :center
+                              :justify-content :space-around
+                              :flex 1
+                              :margin 5
+                              :padding 5
+                              :border-radius 10
+                              :width 80
+                              :background-color :#fafafa}}
+          [:> Image {:source image :style {:width 50 :height 50}}]
+          [:> rn/Text (str score)]])]]
+
+     [:> rn/View {:style {:flex 4
+                          :padding-vertical 30
+                          :width (home-props :screen-width)
+                          :align-items :center
+                          :background-color :white
+                          :border-radius 10}}
+      [:> rn/View {:style {:height 20
+                           :margin-bottom 4
+                           :width (home-props :screen-width)}}
+       [:> rn/Text {:style {:margin-left 10
+                            :font-weight :bold}} "> Main"]]
+      [:> rn/View {:style {:height :80%
+                           :width (* (home-props :screen-width) 0.9)
+                           :background-color :#fafafa}}]]
+
+     [:> rn/View {:background-color :#fafafa
+                  :flex 1
+                  :align-items :center
+                  :flex-direction :column
+                  :justify-content :space-around}
+      [:> rn/ScrollView {:horizontal true
+                         :showsHorizontalScrollIndicator false
+                         :style {:width (home-props :screen-width)
+                                 :flex 1}}
+       [button {:on-press (fn []
+                            (-> props .-navigation (.navigate "Home")))}
+        "Home"]
+       [button {:on-press (fn []
+                            (-> props .-navigation (.navigate "About")))}
+        "About"]
+       [button {:on-press (fn []
+                            (-> props .-navigation (.navigate "Team")))}
+        "Team"]]
       [:> rn/View {:style {:flex-direction :row
                            :align-items :center
-                           :margin-bottom 20}}]
+                           :flex 1}}
+       [:> rn/Text {:style {:font-weight :normal
+                            :font-size   10
+                            :color       :black}}
+        "Using: shadow-cljs+expo+reagent+re-frame"]]]
+     [:> StatusBar {:style "auto"}]]))
+
+(defn- team
+  []
+  (r/with-let [counter (rf/subscribe [:get-counter])]
+    [:> rn/View {:style {:flex 1
+                         :padding-vertical 50
+                         :padding-horizontal 20
+                         :justify-content :space-between
+                         :align-items :flex-start
+                         :background-color :white}}
+     [:> rn/View {:style {:align-items :flex-start}}
+      [:> rn/Text {:style {:font-weight   :bold
+                           :font-size     54
+                           :color         :black
+                           :margin-bottom 20}}
+       (str "Our Team")]
+      [:> rn/Text {:style {:font-weight   :bold
+                           :font-size     20
+                           :color         :black
+                           :margin-bottom 20}}
+       (str "This app is...")]
       [:> rn/Text {:style {:font-weight :normal
                            :font-size   15
                            :color       :blue}}
-       "Using: shadow-cljs+expo+reagent+re-frame"]]
+       "Built with React Native, Expo, Reagent, re-frame, and React Navigation"]]
      [:> StatusBar {:style "auto"}]]))
 
 (defn- about
@@ -70,14 +134,14 @@
      [:> rn/View {:style {:align-items :flex-start}}
       [:> rn/Text {:style {:font-weight   :bold
                            :font-size     54
-                           :color         :blue
+                           :color         :black
                            :margin-bottom 20}}
-       "About Example App"]
+       (str "About" (home-props :title))]
       [:> rn/Text {:style {:font-weight   :bold
                            :font-size     20
-                           :color         :blue
+                           :color         :black
                            :margin-bottom 20}}
-       (str "Counter is at: " @counter)]
+       (str "This app is...")]
       [:> rn/Text {:style {:font-weight :normal
                            :font-size   15
                            :color       :blue}}
@@ -97,9 +161,12 @@
      [:> Stack.Navigator
       [:> Stack.Screen {:name "Home"
                         :component (fn [props] (r/as-element [home props]))
-                        :options {:title "Bet Cs"}}]
+                        :options {:title (home-props :title)}}]
       [:> Stack.Screen {:name "About"
                         :component (fn [props] (r/as-element [about props]))
+                        :options {:title "About"}}]
+      [:> Stack.Screen {:name "Team"
+                        :component (fn [props] (r/as-element [team props]))
                         :options {:title "About"}}]]]))
 
 (defn start
