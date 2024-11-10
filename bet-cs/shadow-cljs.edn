@@ -5,7 +5,7 @@
                 [re-frame "1.3.0"]]
 
  :builds       {:app {:target           :react-native
-                      :init-fn          example.app/init
+                      :init-fn          csgo.app/init
                       :output-dir       "app"
                       :compiler-options {:infer-externs :auto}
                       :devtools         {:autoload true}}}}

@@ -1,8 +1,8 @@
-(ns example.app
+(ns csgo.app
   (:require
-   [example.events]
-   [example.subs]
-   [example.widgets :refer [button]]
+   [csgo.events]
+   [csgo.subs]
+   [csgo.widgets :refer [button]]
    [expo.root :as expo-root]
    ["expo-status-bar" :refer [StatusBar]]
    [re-frame.core :as rf]
@@ -11,7 +11,8 @@
    ["@react-navigation/native" :as rnn]
    ["expo-linear-gradient" :refer [LinearGradient]]
    ["expo-image" :refer [Image]]
-   ["@react-navigation/native-stack" :as rnn-stack]))
+   ["@react-navigation/native-stack" :as rnn-stack]
+   [clojure.string :as str]))
 
 (def home-props
   {:title "Bet CS"
@@ -21,38 +22,80 @@
 
 (defonce Stack (rnn-stack/createNativeStackNavigator))
 
+(defn inspect [a] (js/console.log a) a)
+
 (defn home [^js props]
-  (r/with-let [counter (rf/subscribe [:get-counter])
-               tap-enabled? (rf/subscribe [:counter-tappable?])
-               teams (rf/subscribe [:get-teams])]
+  (r/with-let [teams (rf/subscribe [:get-teams])
+               displayed-team (rf/subscribe [:get-displayed-team])]
     [:> rn/View {:style {:padding-vertical 40
                          :flex-direction :column
                          :justify-content :space-between
                          :height (home-props :screen-height)
                          :background-color :white}}
+     (when @displayed-team
+       [:> rn/View {:style {:position :absolute
+                            :top 0
+                            :left 0
+                            :right 0
+                            :bottom 0
+                            :z-index 9000
+                            :justify-content :center
+                            :align-items :center
+                            :background-color :#00000044}}
+        [:> rn/View {:style {:background-color :white
+                             :border-radius 10
+                             :align-items :center
+                             :justify-content :center
+                             :margin-bottom 20
+                             :width :90%
+                             :height :80%}}
+         [:> rn/Pressable {:on-press #(rf/dispatch [:change-id false])
+                           :style {:top 10
+                                   :height :10%
+                                   :right :-35%
+                                   :padding 10}}
+          [:> rn/Text {:style {:color :black
+                               :font-size 18}} "close"]]
+         [:> rn/View {:style {:height :90%
+                              :width :100%}}
+          [:> rn/ScrollView {:vertical true :align-items :center}
+           [:> Image {:source (get-in  @teams [(keyword @displayed-team) :image])
+                      :content-fit :cover
+                      :style {:width 100
+                              :height 100
+                              :padding 20
+                              :margin-bottom 20
+                              :align-items :center}}]
+           [:> rn/Text {:style {:color :black}}
+            (str (get-in @teams [(keyword @displayed-team) :text]))]]]]])
+
      [:> rn/View {:style {:flex 1}}
       [:> rn/View {:style {:height 20
                            :margin-bottom 5
                            :width (home-props :screen-width)}}
        [:> rn/Text {:style {:margin-left 10
-                            :font-weight :bold}} "> Top 20"]]
+                            :font-weight :bold}} "> Top 10"]]
       [:> rn/ScrollView {:horizontal true
                          :showsHorizontalScrollIndicator false
                          :style {:width (home-props :screen-width)
                                  :flex 2
                                  :overflow-x :none}}
-       (for [[team-id {:keys [image score]}] @teams]
+       (for [[team-id {:keys [image score]}] (take 10 @teams)]
          ^{:key team-id}
-         [:> rn/View {:style {:align-items :center
-                              :justify-content :space-around
-                              :flex 1
-                              :margin 5
-                              :padding 5
-                              :border-radius 10
-                              :width 80
-                              :background-color :#fafafa}}
-          [:> Image {:source image :style {:width 50 :height 50}}]
-          [:> rn/Text (str score)]])]]
+         [:> rn/Pressable {:on-press #(rf/dispatch [:change-id  (str/replace-first (str team-id) #":" "")])}
+          [:> rn/View {:style {:align-items :center
+                               :justify-content :space-around
+                               :flex 1
+                               :margin 5
+                               :padding 5
+                               :border-radius 10
+                               :width 80
+                               :background-color "#fafafa"}}
+           [:> Image {:source image
+                      :content-fit :cover
+                      :style {:width :60%
+                              :height :60%}}]
+           [:> rn/Text (str score)]]])]]
 
      [:> rn/View {:style {:flex 4
                           :padding-vertical 30
@@ -136,7 +179,7 @@
                            :font-size     54
                            :color         :black
                            :margin-bottom 20}}
-       (str "About" (home-props :title))]
+       (str "About " (home-props :title))]
       [:> rn/Text {:style {:font-weight   :bold
                            :font-size     20
                            :color         :black
@@ -149,7 +192,6 @@
      [:> StatusBar {:style "auto"}]]))
 
 (defn root []
-  ;; The save and restore of the navigation root state is for development time bliss
   (r/with-let [!root-state (rf/subscribe [:navigation/root-state])
                save-root-state! (fn [^js state]
                                   (rf/dispatch [:navigation/set-root-state state]))

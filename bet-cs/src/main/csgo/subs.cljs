@@ -1,4 +1,4 @@
-(ns example.subs
+(ns csgo.subs
   (:require [re-frame.core :as rf]))
 
 (rf/reg-sub
@@ -11,11 +11,15 @@
  (fn [db _]
    (:counter-tappable? db)))
 
+(rf/reg-sub
+ :get-teams
+ (fn [db _]
+   (:teams db)))
 
 (rf/reg-sub
-  :get-teams
-  (fn [db _]
-    (:teams db)))
+ :get-displayed-team
+ (fn [db _]
+   (get db :team-id)))
 
 (rf/reg-sub
  :navigation/root-state

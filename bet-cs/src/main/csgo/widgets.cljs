@@ -1,4 +1,4 @@
-(ns example.widgets
+(ns csgo.widgets
   (:require 
     ["react-native" :as rn]))
 
@@ -26,3 +26,5 @@
                          disabled? (merge {:color :white}
                                           disabled-text-style))}
     text]])
+
+(defn team-popup [{:keys [style text-style ]}])
