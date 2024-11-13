@@ -16,10 +16,21 @@
  (fn [db _]
    (:teams db)))
 
+(rf/reg-sub 
+  :get-games
+  (fn [db _]
+    (:games db)))
+
 (rf/reg-sub
  :get-displayed-team
  (fn [db _]
    (get db :team-id)))
+
+
+(rf/reg-sub
+ :get-displayed-game
+ (fn [db _]
+   (get db :game-id)))
 
 (rf/reg-sub
  :navigation/root-state

@@ -1,5 +1,6 @@
 (ns csgo.events
   (:require
+   ["expo-file-system" :as fs]
    [re-frame.core :as rf]
    [csgo.db :as db :refer [app-db]]))
 
@@ -19,11 +20,22 @@
    (assoc db :team-id team-id)))
 
 (rf/reg-event-db
+ :update-teams
+ (fn [db [_ t]]
+   (assoc db :teams t)))
+
+(rf/reg-event-db
+ :update-games
+ (fn [db [_ g]]
+   (assoc db :games g)))
+
+(rf/reg-event-db
+ :change-game-id
+ (fn [db [_ game-id]]
+   (assoc db :game-id game-id)))
+
+(rf/reg-event-db
  :navigation/set-root-state
  (fn [db [_ navigation-root-state]]
    (assoc-in db [:navigation :root-state] navigation-root-state)))
 
-(rf/reg-event-db
- :update-team
- (fn [db [_ team-id updates]]
-   (update-in db [:teams team-id] merge updates)))
