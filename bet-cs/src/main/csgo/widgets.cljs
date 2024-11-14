@@ -2,9 +2,10 @@
   (:require
    ["expo-image" :refer [Image]]
    [re-frame.core :as rf]
-   [reagent.core :as r]
    [clojure.string :as str]
    ["react-native" :as rn]))
+
+(defn inspect [a] (js/console.log a) a)
 
 (defn button [{:keys [style text-style on-press
                       disabled? disabled-style disabled-text-style]
@@ -58,67 +59,70 @@
                          :width :100%}}
      [:> rn/ScrollView {:horizontal false :align-items :center}
       (when source
-        (if game
+        (if (vector? source)
           (do
-            [:> Image {:source (nth source 0)
-                       :content-fit :cover
-                       :style {:width 100
-                               :height 100
-                               :padding 20
-                               :margin-bottom 20
-                               :align-items :center}}]
-            [:> Image {:source (nth source 1)
-                       :content-fit :cover
-                       :style {:width 100
-                               :height 100
-                               :padding 20
-                               :margin-bottom 20
-                               :align-items :center}}]))
+            [:> rn/View
+             [:> Image {:source (nth (inspect source) 0)
+                        :content-fit :cover
+                        :style {:width 100
+                                :height 100
+                                :padding 20
+                                :margin-bottom 20
+                                :align-items :center}}]
+             [:> Image {:source (nth source 1)
+                        :content-fit :cover
+                        :style {:width 100
+                                :height 100
+                                :padding 20
+                                :margin-bottom 20
+                                :align-items :center}}]])
+          (do [:> Image {:source source
+                         :content-fit :cover
+                         :style {:width 100
+                                 :height 100
+                                 :padding 20
+                                 :margin-bottom 20
+                                 :align-items :center}}])))
 
-        [:> Image {:source source
-                   :content-fit :cover
-                   :style {:width 100
-                           :height 100
-                           :padding 20
-                           :margin-bottom 20
-                           :align-items :center}}])
       [:> rn/Text {:style {:color :black}}
        title]
       [:> rn/View content]]]]])
 
-(defn games-component [{:keys [content teams
-                               home-props]
-                        :or {content nil
-                             teams [:complexity :astralis]}}]
-  (let [name-team-1 (name (nth teams 0))
-        name-team-2 (name (nth teams 1))
+(defn games-component [{:keys [game home-props]}]
+  (let [team1     (str/lower-case (get-in game [:team1 :name]))
+        team2     (str/lower-case (get-in game [:team2 :name]))
+        team1-prob (get-in game [:team1 :win_probability])
+        team2-prob (get-in game [:team2 :win_probability])
         displayed-game (rf/subscribe [:get-displayed-game])
-        teams-db (rf/subscribe [:get-teams])]
-    (when (and content @displayed-game)
+        displayed-team (rf/subscribe [:get-displayed-team])
+        teams-db (rf/subscribe [:get-teams])
+        content (str (game :date))]
+
+    (when (and (and (:content game) @displayed-game) (not @displayed-team))
       (rf/dispatch [:change-id false])
-      (team-popup {:game true
-                   :source [(get-in @teams-db [(keyword name-team-1) :image])
-                            (get-in @teams-db [(keyword name-team-2) :image])]
+      (team-popup {:game game
+                   :source [(get-in @teams-db [(keyword team1) :image])
+                            (get-in @teams-db [(keyword team2) :image])]
                    :content (if (string? content)
                               [:> rn/Text content]
                               content)
-                   :title (str name-team-1 "x" name-team-2)}))
-    [:> rn/Pressable {:on-press #(rf/dispatch [:change-id (str "game" "-" name-team-1 "-" name-team-2)])}
-     [:> rn/View {:style {:width (* 0.75 (home-props :screen-width))
+                   :title (str team1 " x " team2)}))
+
+    [:> rn/Pressable {:on-press #(rf/dispatch [:change-id (str "game-" team1 "-" team2)])}
+     [:> rn/View {:style {:width (* 0.8 (home-props :screen-width))
                           :height 40
                           :border-radius 10
                           :background-color :white
-                          :text :white
                           :flex-direction :row
                           :align-items :center
                           :justify-content :space-around
-                          :margin-top 2.5
-                          :margin-bottom 2.5}}
-      [:> Image {:source (get-in @teams-db [(keyword name-team-1) :image])
-                 :style {:width :100% :height :100%
+                          :margin-top 15}}
+      [:> Image {:source (get-in @teams-db [(keyword team1) :image])
+                 :style {:width :100%
+                         :height :100%
                          :flex 3}}]
-      [:> rn/Text {:style {:color :black
-                           :flex 1}} ""]
-      [:> Image {:source (get-in @teams-db [(keyword name-team-2) :image])
-                 :style {:width :100% :height :100%
+      [:> rn/Text {:style {:flex 1}} ""]
+      [:> Image {:source (get-in @teams-db [(keyword team2) :image])
+                 :style {:width :100%
+                         :height :100%
                          :flex 3}}]]]))

@@ -17,6 +17,8 @@
    ["@react-navigation/native-stack" :as rnn-stack]
    [clojure.string :as str]))
 
+(defn inspect [a] (js/console.log a) a)
+
 (def home-props
   {:title "Bet CS"
    :home-icon ""
@@ -26,18 +28,19 @@
 (defonce Stack (rnn-stack/createNativeStackNavigator))
 
 (defn home [^js props]
-  (r/with-let [teams (rf/subscribe [:get-teams])
+  (r/with-let [teams-db (rf/subscribe [:get-teams])
                displayed-team (rf/subscribe [:get-displayed-team])
                displayed-game (rf/subscribe [:get-displayed-game])
                games (rf/subscribe [:get-games])]
     [:> rn/View {:style {:padding-vertical 40
                          :flex-direction :column
+                         :align-items :center
                          :justify-content :space-between
                          :height (home-props :screen-height)
                          :background-color :white}}
      (when (and @displayed-team (false? @displayed-game))
-       (team-popup {:source (get-in  @teams [(keyword @displayed-team) :image])
-                    :title (str (get-in @teams [(keyword @displayed-team) :text]))}))
+       (team-popup {:source (get-in  (inspect @teams-db) [(keyword @displayed-team) :image])
+                    :title (str (get-in @teams-db [(keyword @displayed-team) :text]))}))
 
      [:> rn/View {:style {:flex 1}}
       [:> rn/View {:style {:height 20
@@ -50,12 +53,13 @@
                          :style {:width (home-props :screen-width)
                                  :flex 2
                                  :overflow-x :none}}
-       (for [[team-id {:keys [image score]}] (take 10 @teams)]
+       (for [[team-id {:keys [image score]}] (take 10 @teams-db)]
          ^{:key team-id}
-         [:> rn/Pressable {:on-press #(rf/dispatch [:change-id (name team-id)])}
+         [:> rn/Pressable {:on-press #(rf/dispatch [:change-id (inspect (name team-id))])}
           [:> rn/View {:style {:align-items :center
                                :justify-content :space-around
                                :flex 1
+                               :flex-grow 1
                                :margin 5
                                :padding 5
                                :border-radius 10
@@ -81,14 +85,16 @@
       [:> rn/View {:style {:height :80%
                            :width (* (home-props :screen-width) 0.9)
                            :border-radius 10
+                           :justify-content :center
+                           :align-items :center
                            :background-color :#fafafa}}
-       [:> rn/ScrollView {:horizontal false
-                          :align-items :center
-                          :width (* 0.95 (home-props :screen-width))
-                          :justify-content :center}
-        (doseq [[team1 team2] @games]
-          (games-component {:teams [(keyword team1) (keyword team2)]
-                            :home-props home-props :teams-db teams}))]]]
+       [:> rn/ScrollView {:style {}}
+        (when @games
+          (doall
+           (for [game @games]
+             ^{:key (str (:date game) "-" (get-in game [:team1 :name]) "-" (get-in game [:team2 :name]))}
+             [games-component {:game game
+                               :home-props home-props}])))]]]
 
      [:> rn/View {:background-color :#fafafa
                   :flex 1
