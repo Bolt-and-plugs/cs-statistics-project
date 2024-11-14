@@ -4,7 +4,7 @@
    [goog.string.format]
    [csgo.events]
    [csgo.subs]
-   [csgo.db :refer [get-match-by-date-and-teams]]
+   [csgo.db :refer [teams-img]]
    [csgo.widgets :refer [button team-popup games-component]]
    [expo.root :as expo-root]
    ["expo-file-system" :as fs]
@@ -18,6 +18,27 @@
    [clojure.string :as str]))
 
 (defn inspect [a] (js/console.log a) a)
+
+(def render-score-item
+  (memoize
+   (fn [{:keys [id score]}]
+     (let [image (teams-img (keyword id))]
+       [:> rn/Pressable
+        {:on-press #(rf/dispatch [:change-id id])
+         :style {:margin-horizontal 2.5}}
+        [:> rn/View {:style {:align-items "center"
+                             :justify-content "space-around"
+                             :margin 2.5
+                             :padding 5
+                             :border-radius 10
+                             :width 90
+                             :background-color "#fafafa"}}
+         [:> rn/Image {:source image
+                       :style {:width 55 :height 55}
+                       :content-fit "cover"}]
+         [:> rn/Text {:number-of-lines 1
+                      :style {:margin-top 4}}
+          (gstring/format "%.2f" (or score 0))]]]))))
 
 (def home-props
   {:title "Bet CS"
@@ -48,28 +69,30 @@
                            :width (home-props :screen-width)}}
        [:> rn/Text {:style {:margin-left 10
                             :font-weight :bold}} "> Top 10"]]
-      [:> rn/ScrollView {:horizontal true
-                         :showsHorizontalScrollIndicator false
-                         :style {:width (home-props :screen-width)
-                                 :flex 2
-                                 :overflow-x :none}}
-       (for [[team-id {:keys [image score]}] (take 10 @teams-db)]
-         ^{:key team-id}
-         [:> rn/Pressable {:on-press #(rf/dispatch [:change-id (inspect (name team-id))])}
-          [:> rn/View {:style {:align-items :center
-                               :justify-content :space-around
-                               :flex 1
-                               :flex-grow 1
-                               :margin 5
-                               :padding 5
-                               :border-radius 10
-                               :width 90
-                               :background-color "#fafafa"}}
-           [:> Image {:source image
-                      :content-fit :cover
-                      :style {:width :60%
-                              :height :60%}}]
-           [:> rn/Text (gstring/format "%.2f" (if score score 0))]]])]]
+
+      [:> rn/View
+       (let [sorted-data
+             (clj->js (take 10 (sort-by :score >
+                                        (mapv (fn [[team-id team-data]]
+                                                (assoc team-data :id (str (name team-id))))
+                                              @teams-db))))
+             render-item (fn [item]
+                           (r/as-element
+                            (render-score-item
+                             (js->clj (.-item item) :keywordize-keys true))))]
+         [:> rn/View {:style {:flex 1}}
+          [:> rn/FlatList
+           {:data sorted-data
+            :key-extractor #(.-id %)
+            :render-item render-item
+            :horizontal true
+            :style {:flex 1}
+            :content-container-style {:padding-horizontal 5}
+            :initial-num-to-render 4
+            :window-size 3
+            :max-to-render-per-batch 3
+            :update-cell-batch-ingress 1
+            :remove-clipped-subviews true}]])]]
 
      [:> rn/View {:style {:flex 4
                           :padding-vertical 30
@@ -88,7 +111,7 @@
                            :justify-content :center
                            :align-items :center
                            :background-color :#fafafa}}
-       [:> rn/ScrollView {:style {}}
+       [:> rn/ScrollView
         (when @games
           (doall
            (for [game @games]

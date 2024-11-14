@@ -62,7 +62,7 @@
         (if (vector? source)
           (do
             [:> rn/View
-             [:> Image {:source (nth (inspect source) 0)
+             [:> Image {:source (nth  source 0)
                         :content-fit :cover
                         :style {:width 100
                                 :height 100
