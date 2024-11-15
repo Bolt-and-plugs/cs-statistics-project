@@ -4,44 +4,39 @@
    [goog.string.format]
    [csgo.events]
    [csgo.subs]
-   [csgo.db :refer [teams-img]]
-   [csgo.widgets :refer [button team-popup games-component]]
+   [csgo.widgets :refer [button team-popup games-list]]
    [expo.root :as expo-root]
-   ["expo-file-system" :as fs]
    ["expo-status-bar" :refer [StatusBar]]
    [re-frame.core :as rf]
    ["react-native" :as rn]
    [reagent.core :as r]
    ["@react-navigation/native" :as rnn]
-   ["expo-image" :refer [Image]]
    ["@react-navigation/native-stack" :as rnn-stack]
    [clojure.string :as str]))
 
-(defn inspect [a] (js/console.log a) a)
+(defn inspect [a] (prn a) a)
 
 (def render-score-item
   (memoize
-   (fn [{:keys [id score]}]
-     (let [image (teams-img (keyword id))]
-       [:> rn/Pressable
-        {:on-press #(rf/dispatch [:change-id id])
-         :style {:margin-horizontal 2.5}}
-        [:> rn/View {:style {:align-items "center"
-                             :justify-content "space-around"
-                             :margin 2.5
-                             :padding 5
-                             :border-radius 10
-                             :width 90
-                             :background-color "#fafafa"}}
-         [:> rn/Image {:source image
-                       :style {:width 55 :height 55}
-                       :content-fit "cover"}]
-         [:> rn/Text {:number-of-lines 1
-                      :style {:margin-top 4}}
-          (gstring/format "%.2f" (or score 0))]]]))))
+   (fn [{:keys [team elo image]}]
+     [:> rn/Pressable
+      {:on-press #(rf/dispatch [:change-id [team image]])
+       :style {:margin-horizontal 2.5}}
+      [:> rn/View {:style {:align-items :center
+                           :justify-content :space-around
+                           :margin 2.5
+                           :padding 5
+                           :border-radius 10
+                           :width 90
+                           :background-color :#fafafa}}
+       [:> rn/Image {:source image
+                     :style {:width 50 :height 50}
+                     :content-fit :fit}]
+       [:> rn/Text {:number-of-lines 1}
+        (gstring/format "%.2f" (or elo 0))]]])))
 
 (def home-props
-  {:title "Bet CS"
+  {:title "Pred CS"
    :home-icon ""
    :screen-width (.-width (.get (.-Dimensions rn) "window"))
    :screen-height (.-height (.get (.-Dimensions rn) "window"))})
@@ -52,7 +47,7 @@
   (r/with-let [teams-db (rf/subscribe [:get-teams])
                displayed-team (rf/subscribe [:get-displayed-team])
                displayed-game (rf/subscribe [:get-displayed-game])
-               games (rf/subscribe [:get-games])]
+               teams-img (rf/subscribe [:get-teams-img])]
     [:> rn/View {:style {:padding-vertical 40
                          :flex-direction :column
                          :align-items :center
@@ -60,8 +55,9 @@
                          :height (home-props :screen-height)
                          :background-color :white}}
      (when (and @displayed-team (false? @displayed-game))
-       (team-popup {:source (get-in  (inspect @teams-db) [(keyword @displayed-team) :image])
-                    :title (str (get-in @teams-db [(keyword @displayed-team) :text]))}))
+       (team-popup {:source (get @teams-img (:name @displayed-team))
+                    :title  (:name @displayed-team)
+                    :content [:> rn/Text (:name @displayed-team)]}))
 
      [:> rn/View {:style {:flex 1}}
       [:> rn/View {:style {:height 20
@@ -72,14 +68,12 @@
 
       [:> rn/View
        (let [sorted-data
-             (clj->js (take 10 (sort-by :score >
-                                        (mapv (fn [[team-id team-data]]
-                                                (assoc team-data :id (str (name team-id))))
-                                              @teams-db))))
+             (clj->js (inspect (take 10 (mapv
+                                         #(assoc % :id (str (str/lower-case (:team %)) "-" (random-uuid)) :image (@teams-img (keyword (str/lower-case (:team %)))))
+                                         @teams-db))))
              render-item (fn [item]
                            (r/as-element
-                            (render-score-item
-                             (js->clj (.-item item) :keywordize-keys true))))]
+                            (render-score-item (inspect (js->clj (.-item item) :keywordize-keys true)))))]
          [:> rn/View {:style {:flex 1}}
           [:> rn/FlatList
            {:data sorted-data
@@ -88,10 +82,8 @@
             :horizontal true
             :style {:flex 1}
             :content-container-style {:padding-horizontal 5}
-            :initial-num-to-render 4
-            :window-size 3
-            :max-to-render-per-batch 3
-            :update-cell-batch-ingress 1
+            :initial-num-to-render 10
+            :max-to-render-per-batch 10
             :remove-clipped-subviews true}]])]]
 
      [:> rn/View {:style {:flex 4
@@ -104,20 +96,14 @@
                            :margin-bottom 4
                            :width (home-props :screen-width)}}
        [:> rn/Text {:style {:margin-left 10
-                            :font-weight :bold}} "> Main"]]
+                            :font-weight :bold}} "> Games"]]
       [:> rn/View {:style {:height :80%
                            :width (* (home-props :screen-width) 0.9)
                            :border-radius 10
                            :justify-content :center
                            :align-items :center
                            :background-color :#fafafa}}
-       [:> rn/ScrollView
-        (when @games
-          (doall
-           (for [game @games]
-             ^{:key (str (:date game) "-" (get-in game [:team1 :name]) "-" (get-in game [:team2 :name]))}
-             [games-component {:game game
-                               :home-props home-props}])))]]]
+       (games-list home-props)]]
 
      [:> rn/View {:background-color :#fafafa
                   :flex 1
@@ -148,7 +134,7 @@
 
 (defn- team
   []
-  (r/with-let []
+  (r/with-let [teams-db @(rf/subscribe [:get-teams])]
     [:> rn/View {:style {:flex 1
                          :padding-vertical 50
                          :padding-horizontal 20
@@ -160,12 +146,12 @@
                            :font-size     54
                            :color         :black
                            :margin-bottom 20}}
-       (str "Our Team")]
+       (str "All teams")]
       [:> rn/Text {:style {:font-weight   :bold
                            :font-size     20
                            :color         :black
-                           :margin-bottom 20}}
-       (str "This app is...")]
+                           :margin-bottom 20}}]
+
       [:> rn/Text {:style {:font-weight :normal
                            :font-size   15
                            :color       :blue}}

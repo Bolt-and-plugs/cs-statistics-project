@@ -34,6 +34,11 @@
  (fn [db [_ game-id]]
    (assoc db :game-id game-id)))
 
+(rf/reg-event-db 
+  :update-focused-game
+  (fn [db [_ match-id]]
+    (assoc db :focused-game match-id)))
+
 (rf/reg-event-db
  :navigation/set-root-state
  (fn [db [_ navigation-root-state]]
