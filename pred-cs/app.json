@@ -2,8 +2,9 @@
   "expo": {
     "name": "pred:cs",
     "slug": "reagent-expo",
-    "sdkVersion": "51.0.0",
+    "sdkVersion": "52.0.0",
     "privacy": "public",
+    "newArchEnabled": true,
     "platforms": [
       "ios",
       "android",

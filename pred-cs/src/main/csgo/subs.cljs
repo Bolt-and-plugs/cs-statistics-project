@@ -37,7 +37,7 @@
    (get db :game-id)))
 
 (rf/reg-sub
- :get-focusded-game
+ :get-focused-game
  (fn [db _]
    (get db :focused-game)))
 

@@ -1,0 +1,23 @@
+{
+  "name": "csgo-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "npm install csv-parser dotenv express moment",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "http": "^0.0.1-security",
+    "http-server": "^14.1.1",
+    "moment": "^2.30.1",
+    "simple-statistics": "^7.8.7"
+  }
+}

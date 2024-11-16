@@ -7,10 +7,11 @@
 
 (defn inspect [a] (prn a) a)
 
-(def url-match "https://csgo-api-production-b5a0.up.railway.app/match?")
-(def url-teams "https://csgo-api-production-b5a0.up.railway.app/rankings?")
+(def base-url "http://192.168.1.17:4000")
+(def url-match (str base-url "/match?"))
+(def url-teams (str base-url "/rankings?"))
 
-(def date "2018-08-30")
+(def date (atom "2018-08-30"))
 
 (def teams-img
   {:navi  (js/require "assets/navi.png")
@@ -30,7 +31,6 @@
    :north  (js/require "assets/north.png")
    :mibr  (js/require "assets/mibr.png")
    :dignitas  (js/require "assets/dignitas.png")
-   ;:ukraine  (js/require "assets/ukraine.png")   
    :godsent  (js/require "assets/godsent.png")
    :optic  (js/require "assets/optic.png")
    :nrg  (js/require "assets/nrg.png")
@@ -108,13 +108,14 @@
   (get-match-by-date-and-teams :MOUSESPORTS :ASTRALIS date))
 
 (dotimes [_ 1]
-  (fetch-initial-games date)
-  (get-teams-by-date date))
+  (get-teams-by-date @date)
+  (fetch-initial-games @date))
 
 ;; initial state of app-db
 (defonce app-db {:teams @teams-js
                  :teams-img teams-img
                  :games @games-js
+                 :date @date
                  :team-id false
                  :game-id false
                  :focused-game false})
