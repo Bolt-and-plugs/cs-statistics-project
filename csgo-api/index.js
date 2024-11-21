@@ -122,8 +122,8 @@ app.get('/match', (req, res) => {
     }
   
     // Find team ELO ratings
-    const team1Rank = Math.ceil((Object.values(closestMatch).findIndex(val => val === team1Input) + 1) / 2);
-    const team2Rank = Math.ceil((Object.values(closestMatch).findIndex(val => val === team2Input) + 1) / 2);
+    const team1Rank = Math.ceil((Object.values(closestMatch).findIndex((val, i) => i > 2 ? val === team1Input : false) - 1) / 2);
+    const team2Rank = Math.ceil((Object.values(closestMatch).findIndex((val, i) => i > 2 ? val === team2Input : false) - 1) / 2);
     
     const team1Elo = closestMatch[`top_${team1Rank}_elo`];
     const team2Elo = closestMatch[`top_${team2Rank}_elo`];
@@ -140,7 +140,11 @@ app.get('/match', (req, res) => {
     const { t1_points, t2_points, team_1, team_2, match_date } = games[carlosI];
     const isFicticional = !((match_date.format('YYYY-MM-DD') === dateInput && team_1 === team1Input && team_2 === team2Input) || change);
     
+<<<<<<< HEAD
     exec(`python3 sim_matches.py ${team1Input} ${team2Input} ${dateInput}`, (err, stdout, stderr) => {
+=======
+    exec(`python sim_matches.py ${team1Input} ${team2Input} ${dateInput}`, (err, stdout, stderr) => {
+>>>>>>> refs/remotes/origin/main
         if (!(stdout === 't1' || stdout === 't2')) {
             console.log({err, stdout, stderr})
             return console.log("bigodou legal");
