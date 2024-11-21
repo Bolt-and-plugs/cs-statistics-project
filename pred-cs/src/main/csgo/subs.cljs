@@ -42,6 +42,26 @@
    (get db :focused-game)))
 
 (rf/reg-sub
+ :get-date
+ (fn [db _]
+   (get db :date)))
+
+(rf/reg-sub
+ :get-start-date
+ (fn [db _]
+   (:start-date db ""))) 
+
+(rf/reg-sub
+ :get-end-date
+ (fn [db _]
+   (:end-date db ""))) 
+
+(rf/reg-sub
+ :get-active-team-metrics
+ (fn [db _]
+   (get db :team-metrics)))
+
+(rf/reg-sub
  :navigation/root-state
  (fn [db _]
    (get-in db [:navigation :root-state])))

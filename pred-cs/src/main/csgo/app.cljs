@@ -4,7 +4,7 @@
    [goog.string.format]
    [csgo.events]
    [csgo.subs]
-   [csgo.widgets :refer [button team-popup games-list]]
+   [csgo.widgets :refer [button team-popup games-list render-score-item all-teams]]
    [expo.root :as expo-root]
    ["expo-status-bar" :refer [StatusBar]]
    [re-frame.core :as rf]
@@ -13,27 +13,6 @@
    ["@react-navigation/native" :as rnn]
    ["@react-navigation/native-stack" :as rnn-stack]
    [clojure.string :as str]))
-
-(defn inspect [a] (prn a) a)
-
-(def render-score-item
-  (memoize
-   (fn [{:keys [team elo image]}]
-     [:> rn/Pressable
-      {:on-press #(rf/dispatch [:change-id [team image]])
-       :style {:margin-horizontal 2.5}}
-      [:> rn/View {:style {:align-items :center
-                           :justify-content :space-around
-                           :margin 2.5
-                           :padding 5
-                           :border-radius 10
-                           :width 90
-                           :background-color :#fafafa}}
-       [:> rn/Image {:source image
-                     :style {:width 50 :height 50}
-                     :content-fit :fit}]
-       [:> rn/Text {:number-of-lines 1}
-        (gstring/format "%.2f" (or elo 0))]]])))
 
 (def home-props
   {:title "Pred CS"
@@ -55,9 +34,8 @@
                          :height (home-props :screen-height)
                          :background-color :white}}
      (when (and @displayed-team (false? @displayed-game))
-       (team-popup {:source (inspect (nth @displayed-team 1))
-                    :title  (nth @displayed-team 0)
-                    #_#_:content [:> rn/Text (nth @displayed-team 0)]}))
+       (team-popup {:source (nth @displayed-team 1)
+                    :title  (nth @displayed-team 0)}))
 
      [:> rn/View {:style {:flex 1}}
       [:> rn/View {:style {:height 20
@@ -68,12 +46,12 @@
 
       [:> rn/View
        (let [sorted-data
-             (clj->js (inspect (take 10 (mapv
-                                         #(assoc % :id (str (str/lower-case (:team %)) "-" (random-uuid)) :image (@teams-img (keyword (str/lower-case (:team %)))))
-                                         @teams-db))))
+             (clj->js  (take 10 (mapv
+                                 #(assoc % :id (str (str/lower-case (:team %)) "-" (random-uuid)) :image (@teams-img (keyword (str/lower-case (:team %)))))
+                                 @teams-db)))
              render-item (fn [item]
                            (r/as-element
-                            (render-score-item (inspect (js->clj (.-item item) :keywordize-keys true)))))]
+                            (render-score-item  (js->clj (.-item item) :keywordize-keys true))))]
          [:> rn/View {:style {:flex 1}}
           [:> rn/FlatList
            {:data sorted-data
@@ -131,53 +109,6 @@
         "Using: shadow-cljs+expo+reagent+re-frame"]]]
      [:> StatusBar {:style "auto"}]]))
 
-(def render-team
-  (memoize
-   (fn [{:keys [team elo top image]}]
-     [:> rn/View {:style {:align-items :center
-                          :flex-direction :row
-                          :justify-content :space-around
-                          :margin 2.5
-                          :padding 5
-                          :border-radius 10
-                          :width :100%
-                          :height 80
-                          :background-color :#fafafa}}
-      [:> rn/Image {:source image
-                    :flex 1
-                    :style {:width 50 :height 50}
-                    :content-fit :fit}]
-      [:> rn/View  {:style {:flex 5
-                            :justify-content :center
-                            :flex-direction :column
-                            :align-items :flex-end}}
-       [:> rn/Text {:number-of-lines 1}
-        (str top "° - " team)]
-       [:> rn/Text {:number-of-lines 1}
-        (gstring/format "%.2f" (or elo 0))]]])))
-
-(defn- all-teams [teams-db teams-img]
-  [:> rn/View
-   (let [sorted-data (clj->js
-                      (mapv
-                       #(assoc % :id (str (str/lower-case (:team %)) "-" (random-uuid))
-                               :image (teams-img (keyword (str/lower-case (:team %)))))
-                       teams-db))
-         render-item (fn [item]
-                       (r/as-element
-                        (render-team (inspect (js->clj (.-item item) :keywordize-keys true)))))]
-     [:> rn/View {:style {:flex 1
-                          :height :90%}}
-      [:> rn/FlatList
-       {:data sorted-data
-        :key-extractor #(.-id %)
-        :render-item render-item
-        :horizontal false
-        :content-container-style {:padding-horizontal 5}
-        :initial-num-to-render 10
-        :max-to-render-per-batch 10
-        :remove-clipped-subviews true}]])])
-
 (defn- team
   []
   (r/with-let [teams-db @(rf/subscribe [:get-teams])
@@ -188,13 +119,16 @@
                          :justify-content :space-between
                          :align-items :flex-start
                          :background-color :white}}
-     [:> rn/View {:style {:align-items :flex-start}}
+     [:> rn/View {:style {:align-items :flex-start
+                          :width (:screen-width home-props)}}
       [:> rn/Text {:style {:font-weight   :bold
                            :font-size     54
                            :color         :black
                            :margin-bottom 20}}
        (str "All teams")]
-      (all-teams teams-db teams-img)
+      [:> rn/View {:style {:height :80%
+                           :width (:screen-width home-props)}}
+       (all-teams teams-db teams-img)]
       [:> rn/Text {:style {:font-weight :normal
                            :font-size   15
                            :color       :blue}}

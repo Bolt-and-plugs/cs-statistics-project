@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "pred:cs",
-    "slug": "reagent-expo",
+    "slug": "pred-cs",
     "sdkVersion": "52.0.0",
     "privacy": "public",
     "newArchEnabled": true,
@@ -32,10 +32,14 @@
         "expo-asset"
       ]
     ],
-
     "android": {
-      "package": "com.web.reagent-expo",
+      "package": "com.simmm.predcs",
       "versionCode": 1
     },
+    "extra": {
+      "eas": {
+        "projectId": "5bb874e3-f0e6-4844-8710-f060b8f343e2"
+      }
+    }
   }
 }

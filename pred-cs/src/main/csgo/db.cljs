@@ -5,11 +5,10 @@
    [clojure.string :as str]
    [re-frame.core :as rf]))
 
-(defn inspect [a] (prn a) a)
-
-(def base-url "http://192.168.1.17:4000")
+(def base-url "http://192.168.15.8:4000")
 (def url-match (str base-url "/match?"))
 (def url-teams (str base-url "/rankings?"))
+(def url-metrics (str base-url "/metrics?"))
 
 (def date (atom "2018-08-30"))
 
@@ -25,7 +24,7 @@
    :liquid  (js/require "assets/liquid.png")
    :big  (js/require "assets/big.png")
    :fnatic  (js/require "assets/fnatic.png")
-   :soldiers  (js/require "assets/soldiers.png")
+   :space_soldiers  (js/require "assets/soldiers.png")
    :immortals  (js/require "assets/immortals.png")
    :mousesports  (js/require "assets/mousesports.png")
    :north  (js/require "assets/north.png")
@@ -72,7 +71,6 @@
              (rf/dispatch [:update-games new-value])))
 
 (defn fetch-json [uri]
-  (inspect uri)
   (let [headers #js {"Content-Type" "application/json"}]
     (-> (js/fetch uri #js {:method "GET" :headers headers})
         (.then (fn [response]
@@ -83,6 +81,12 @@
         (.catch (fn [error]
                   (js/console.error "Error fetching data:" error)
                   nil)))))
+
+(defn get-teams-metrics-by-date [team start end]
+  (async/go
+    (let [uri (str url-metrics "team=" team "&date_start=" start "&date_end=" end)
+          metrics-data (<p! (fetch-json uri))]
+      (rf/dispatch [:change-active-team-metrics metrics-data]))))
 
 (defn get-match-by-date-and-teams [team1 team2 date]
   (async/go
@@ -100,12 +104,17 @@
       (reset! teams-js teams-data))))
 
 (defn fetch-initial-games [date]
-  (get-match-by-date-and-teams :NIP :G2 date)
-  (get-match-by-date-and-teams :LIQUID :FNATIC date)
-  (get-match-by-date-and-teams :LIQUID :ASTRALIS date)
-  (get-match-by-date-and-teams :CLOUD9 :ASTRALIS date)
-  (get-match-by-date-and-teams :NAVI :ASTRALIS date)
-  (get-match-by-date-and-teams :MOUSESPORTS :ASTRALIS date))
+  ;; Competitive matchups based on ELO scores
+  (get-match-by-date-and-teams :ASTRALIS :NAVI date) ;; Top 1 vs Top 2
+  (get-match-by-date-and-teams :FAZE :LIQUID date)   ;; Top 3 vs Top 4
+  (get-match-by-date-and-teams :NIP :G2 date)       ;; Top 6 vs Top 7
+  (get-match-by-date-and-teams :MOUSESPORTS :NORTH date) ;; Close ELOs
+  ;; Interesting matchups between mid-ranked teams
+  (get-match-by-date-and-teams :CLOUD9 :FNATIC date)
+  (get-match-by-date-and-teams :ENCE :HEROIC date)
+  ;; Lower-ranked matchups
+  (get-match-by-date-and-teams :TYLOO :VIRTUS.PRO date)
+  (get-match-by-date-and-teams :GAMBIT :AGO date))
 
 (dotimes [_ 1]
   (get-teams-by-date @date)
@@ -115,7 +124,10 @@
 (defonce app-db {:teams @teams-js
                  :teams-img teams-img
                  :games @games-js
-                 :date @date
+                 :date date
+                 :start-date ""
+                 :end-date ""
                  :team-id false
                  :game-id false
+                 :team-metrics false
                  :focused-game false})
