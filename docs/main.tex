@@ -2,8 +2,9 @@
 \usepackage{amsthm}
 \usepackage[figuresright]{rotating}
 \usepackage{graphicx}
+\usepackage{ragged2e}
 \usepackage{booktabs}
-\graphicspath{ {./images/} }
+\graphicspath{{./images/}}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{fancybox}
@@ -16,28 +17,25 @@
 \usepackage{relsize}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{subfigure}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{geometry}
+\justifying 
 
 \geometry{
   a4paper,        
   left=2.5cm,     
   right=2.5cm,    
-  top=2.5cm,      
-  bottom=2.5cm    
+  top=1.2cm,      
+  bottom=1.2cm    
 }
 
 \begin{document}
 \title{ANÁLISE DE DIFERENTES ALGORITMOS DE APRENDIZADO DE MÁQUINA PARA RECOMENDAÇÃO DE RESULTADOS NA FRANQUIA COUNTER STRIKE}
 \begin{titlepage}
   \begin{center}
-
-    %\begin{figure}[!ht]
-    %\centering
-    %\includegraphics[width=2cm]{c:/ufba.jpg}
-    %\end{figure}
 
     \Huge{Instituto de Bioci\^{e}ncias, Letras e Ci\^{e}ncias Exatas, Unesp}\\
     \large{Departamento de Ciência da Computação e Estatística}\\ 
@@ -77,9 +75,9 @@ Durante anos, os e-sports, apesar de atuarem no âmbito eletrônico, não utiliz
 
 O volume de dados gerado nas grandes competições promove, de forma quase intuitiva, a necessidade de estabelecermos modelos precisos que analisem o desempenho de grandes nomes do cenário. Assim, podemos interpretá-los em diferentes âmbitos, seja para avaliações técnicas e táticas ou para resultados esportivos, gerando ao usuário do modelo uma menor incerteza sobre resultados que transitam entre o acaso do esporte e a precisão das estatísticas.
 
-\section{Objetivos}
+\subsection{Objetivos}
 \hspace{+15pt}
-Neste projeto, abordaremos a problemática de como diferentes algoritmos de aprendizado de máquina se comportam quando treinados com dados de Counter Strike, utilizando um sistema de rating. O objetivo principal é determinar a probabilidade de vitória de ambos os times, uma vez que essa informação pode ser útil para inúmeros casos, assim como em apostas esportivas.
+O presente trabalho aborda a problemática de como diferentes algoritmos de aprendizado de máquina se comportam quando treinados com dados de Counter Strike, utilizando um sistema de rating. O objetivo principal é determinar a probabilidade de vitória de ambos os times, uma vez que essa informação pode ser útil para inúmeros casos, assim como em apostas esportivas.
 
 
 \section{Justificativa}
@@ -267,13 +265,21 @@ Fatores que podem ter influenciado o desempenho:
 Para a interface gráfica desenvolvemos um aplicativo mobile para visualização dos resultados do projeto, nele é possível consultar estatísticas dos times, visualizar probabilidades de vitória e também consultar o ranking de melhores times ranqueados por elo, como pode ser visto nas imagens abaixo:
 
 \begin{center}
+  \caption{Figura 1: Imagem da UI do aplicativo}
+  \centering
   \includegraphics[width=16cm]{pred_cs_final.png}
+  \label{fig:predicoes_cs_final}
+  \caption{Fonte: Autoral}
 \end{center}
 
 O diagrama abaixo representa um fluxo de dados em um sistema que utiliza uma interface móvel (app) conectada a um backend via API REST, com funcionalidades de manipulação de dados, estado e lógica.
 
 \begin{center}
-  \includegraphics[width=12cm]{arquitetura.png}
+  \caption{Figura 2: Arquitetura do projeto}
+  \centering
+  \includegraphics[width=16cm]{arquitetura.png}
+  \caption{Fonte: Autoral}
+  \label{fig:arquitetura}
 \end{center}
 
 

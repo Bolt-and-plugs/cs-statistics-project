@@ -5,7 +5,7 @@
    [clojure.string :as str]
    [re-frame.core :as rf]))
 
-(def base-url "http://192.168.15.8:4000")
+(def base-url "http://192.168.232.89:4000")
 (def url-match (str base-url "/match?"))
 (def url-teams (str base-url "/rankings?"))
 (def url-metrics (str base-url "/metrics?"))
