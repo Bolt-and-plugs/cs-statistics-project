@@ -15,8 +15,6 @@
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "http": "^0.0.1-security",
-    "http-server": "^14.1.1",
     "moment": "^2.30.1",
     "simple-statistics": "^7.8.7"
   }
